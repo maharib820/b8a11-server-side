@@ -41,8 +41,12 @@ async function run() {
         })
 
         // fetch all jobs by category
-        app.get("/allAddedJobs/:category", (req, res) => {
-            const category = req.params.category;
+        app.get("/allAddedJobs/:category", async (req, res) => {
+            const selectedCategory = req.params.category;
+            console.log(selectedCategory);
+            const filter = { category: selectedCategory };
+            const result = await jobsCollection.find(filter).toArray();
+            res.send(result);
         })
 
         // Send a ping to confirm a successful connection
