@@ -7,13 +7,13 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express());
+app.use(express.json());
 
 // ...........................................................................................................................................
 // ...........................................................................................................................................
 // ......................................................Mongodb Connection...................................................................
 
-const uri = "mongodb+srv://<username>:<password>@cluster0.8ydx2m5.mongodb.net/?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.8ydx2m5.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -30,8 +30,19 @@ async function run() {
         await client.connect();
 
         // ...........................start...........................................
-        app.post("/newAddedJobs", (req, res) => {
-            
+        const jobsCollection = client.db('wavehire').collection('jobsCollection');
+
+        // insert added job in db
+        app.post("/newAddedJobs", async (req, res) => {
+            const newAddedJobsDetails = req.body;
+            console.log(newAddedJobsDetails);
+            const result = await jobsCollection.insertOne(newAddedJobsDetails);
+            res.send(result);
+        })
+
+        // fetch all jobs by category
+        app.get("/allAddedJobs/:category", (req, res) => {
+            const category = req.params.category;
         })
 
         // Send a ping to confirm a successful connection
