@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -49,13 +49,21 @@ async function run() {
             res.send(result);
         })
 
-        // fetdh email wise added jobs for indivisual user
+        // fetch email wise added jobs for indivisual user
         app.get("/allAddedJobs", async (req, res) => {
             let query = [];
             if (req.query?.email) {
-                query = { email: req.query?.email }
+                query = { email: req.query.email }
             }
             const result = await jobsCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        // fetch and send to update
+        app.get("/updateaddedjob/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = {_id : new ObjectId(id)};
+            const result = await jobsCollection.findOne(filter);
             res.send(result);
         })
 
