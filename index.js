@@ -69,8 +69,23 @@ async function run() {
         // fetch and send to update
         app.get("/updateaddedjob/:id", async (req, res) => {
             const id = req.params.id;
-            const filter = {_id : new ObjectId(id)};
+            const filter = { _id: new ObjectId(id) };
             const result = await jobsCollection.findOne(filter);
+            res.send(result);
+        })
+
+        // update my job data
+        app.put("/updateaddedjob/:id", async (req, res) => {
+            const id = req.params.id;
+            const datas = req.body;
+            const filter = { _id: new ObjectId(id) }
+            const option = { upsert: true }
+            const updatedDoc = {
+                $set: {
+                    email: datas.email, title: datas.title, category: datas.category, date: datas.date, minprice: datas.minprice, maxprice: datas.maxprice, description: datas.description
+                }
+            }
+            const result = await jobsCollection.updateOne(filter, updatedDoc, option);
             res.send(result);
         })
 
