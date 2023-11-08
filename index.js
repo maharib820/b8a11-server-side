@@ -124,6 +124,31 @@ async function run() {
             res.send(result);
         })
 
+        // get my all bids requested data
+        app.get("/allRequestedBids", async (req, res) => {
+            let query = [];
+            if (req.query?.email) {
+                query = { postedby: req.query.email }
+            }
+            const result = await bidsCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        // .......................................Patch.........................................................
+        app.patch("/confirm/:id", async (req, res) => {
+            const id = req.params.id;
+            const updateConfirm = req.body;
+            // console.log(updatedBooking);
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    status: updateConfirm.status
+                },
+            };
+            const result = await bidsCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
