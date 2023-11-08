@@ -31,6 +31,13 @@ async function run() {
 
         // ...........................start...........................................
         const jobsCollection = client.db('wavehire').collection('jobsCollection');
+        const categoryCollection = client.db('wavehire').collection('categories');
+
+        // get categories
+        app.get("/categories", async (req, res) => {
+            const result = await categoryCollection.find().toArray();
+            res.send(result);
+        })
 
         // insert added job in db
         app.post("/newAddedJobs", async (req, res) => {
