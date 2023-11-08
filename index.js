@@ -32,6 +32,7 @@ async function run() {
         // ...........................start...........................................
         const jobsCollection = client.db('wavehire').collection('jobsCollection');
         const categoryCollection = client.db('wavehire').collection('categories');
+        const bidsCollection = client.db('wavehire').collection('bidsCollection');
 
         // get categories
         app.get("/categories", async (req, res) => {
@@ -94,6 +95,22 @@ async function run() {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const result = await jobsCollection.deleteOne(filter);
+            res.send(result);
+        })
+
+        // single job details using id
+        app.get("/jobdetails/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const result = await jobsCollection.findOne(filter);
+            res.send(result);
+        })
+
+        // new added bids
+        app.post("/newAddedBids", async (req, res) => {
+            const newAddedBidsDetails = req.body;
+            console.log(newAddedBidsDetails);
+            const result = await bidsCollection.insertOne(newAddedBidsDetails);
             res.send(result);
         })
 
