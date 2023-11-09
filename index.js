@@ -123,19 +123,24 @@ async function run() {
                     bidby: req.query.email
                 }
             }
-            const result = await bidsCollection.find(query).toArray();
+            const result = await bidsCollection.find(query).sort({ status: 1 }).toArray();
             res.send(result);
         })
 
-        // // for filter
-        // app.get("/allBidsFilter", async (req, res) => {
-        //     let query = [];
-        //     if (req.query?.email) {
-        //         query = { bidby: req.query.email }
-        //     }
-        //     const result = await bidsCollection.find(query).toArray();
-        //     res.send(result);
-        // })
+        // get showall my all bids data
+        app.get("/allBidss/:status", async (req, res) => {
+            const status = req.params.status;
+            console.log(status);
+            let query = [];
+            if (req.query?.email) {
+                query = {
+                    bidby: req.query.email
+                }
+            }
+            const filter = { bidby: req.query?.email, status: status }
+            const result = await bidsCollection.find(filter).toArray();
+            res.send(result);
+        })
 
         // get my all bids requested data
         app.get("/allRequestedBids", async (req, res) => {
