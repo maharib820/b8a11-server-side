@@ -3,21 +3,14 @@ const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require("jsonwebtoken");
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors({
-    origin: [
-        'http://localhost:5173',
-        'https://wavehire-5ee55.web.app',
-        'https://wavehire-5ee55.firebaseapp.com'
-    ],
-    credentials: true
-}));
+app.use(cors());
 app.use(express.json());
-app.use(cookieParser());
+// app.use(cookieParser());
 
 // ...........................................................................................................................................
 // ...........................................................................................................................................
@@ -36,25 +29,25 @@ const client = new MongoClient(uri, {
 
 
 // Middleware////////////////////////////////////////////
-const logger = async (req, res, next) => {
-    // console.log(req.method, req.url);
-    next();
-}
+// const logger = async (req, res, next) => {
+//     // console.log(req.method, req.url);
+//     next();
+// }
 
-const verifyToken = async (req, res, next) => {
-    const token = req?.cookies?.settoken;
-    // console.log(token);
-    if(!token){
-        return res.status(401).send({message: "unauthorized accessed"})
-    }
-    jwt.verify(token, process.env.SECRET_ACCESS_TOKEN, (err, decoded) => {
-        if(err){
-            return res.status(401).send({message: "unauthorized accessz"})
-        }
-        req.user = decoded;
-        next();
-    })
-}
+// const verifyToken = async (req, res, next) => {
+//     const token = req?.cookies?.settoken;
+//     // console.log(token);
+//     if(!token){
+//         return res.status(401).send({message: "unauthorized accessed"})
+//     }
+//     jwt.verify(token, process.env.SECRET_ACCESS_TOKEN, (err, decoded) => {
+//         if(err){
+//             return res.status(401).send({message: "unauthorized accessz"})
+//         }
+//         req.user = decoded;
+//         next();
+//     })
+// }
 
 async function run() {
     try {
@@ -68,25 +61,25 @@ async function run() {
 
 
         // authentication api
-        app.post("/jwt", async (req, res) => {
-            const user = req.body;
-            const token = jwt.sign(user, process.env.SECRET_ACCESS_TOKEN, {expiresIn: '1h'})
-            res
-            .cookie('settoken', token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production', 
-                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-            })
-            .send({success: true});
-        })
+        // app.post("/jwt", async (req, res) => {
+        //     const user = req.body;
+        //     const token = jwt.sign(user, process.env.SECRET_ACCESS_TOKEN, {expiresIn: '1h'})
+        //     res
+        //     .cookie('settoken', token, {
+        //         httpOnly: true,
+        //         secure: true,
+        //         sameSite: 'none'
+        //     })
+        //     .send({success: true});
+        // })
 
-        // for logout
-        app.post("/logout", async (req, res) => {
-            const user = req.body;
-            res
-            .clearCookie('settoken', {maxAge: 0})
-            .send({success: true})
-        })
+        // // for logout
+        // app.post("/logout", async (req, res) => {
+        //     const user = req.body;
+        //     res
+        //     .clearCookie('settoken', {maxAge: 0})
+        //     .send({success: true})
+        // })
 
 
         // services api *******************************************************************************************************************************
@@ -119,10 +112,10 @@ async function run() {
         })
 
         // fetch email wise added jobs for indivisual user
-        app.get("/allAddedJobs", logger, verifyToken, async (req, res) => {
-            if(req.user.email !==req.query.email){
-                return res.status(401).send({message: "forbidden access"})
-            }
+        app.get("/allAddedJobs", async (req, res) => {
+            // if(req.user.email !==req.query.email){
+            //     return res.status(401).send({message: "forbidden access"})
+            // }
             let query = [];
             if (req.query?.email) {
                 query = { email: req.query.email }
@@ -179,10 +172,10 @@ async function run() {
         })
 
         // get my all bids data
-        app.get("/allBids", logger, verifyToken, async (req, res) => {
-            if(req.user.email !==req.query.email){
-                return res.status(401).send({message: "forbidden access"})
-            }
+        app.get("/allBids", async (req, res) => {
+            // if(req.user.email !==req.query.email){
+            //     return res.status(401).send({message: "forbidden access"})
+            // }
             let query = [];
             console.log(req.query);
             if (req.query?.email) {
@@ -195,10 +188,10 @@ async function run() {
         })
 
         // get showall my all bids data
-        app.get("/allBidss/:status", logger, verifyToken, async (req, res) => {
-            if(req.user.email !==req.query.email){
-                return res.status(401).send({message: "forbidden access"})
-            }
+        app.get("/allBidss/:status", async (req, res) => {
+            // if(req.user.email !==req.query.email){
+            //     return res.status(401).send({message: "forbidden access"})
+            // }
             const status = req.params.status;
             // console.log(status);
             let query = [];
@@ -213,10 +206,10 @@ async function run() {
         })
 
         // get my all bids requested data
-        app.get("/allRequestedBids", logger, verifyToken, async (req, res) => {
-            if(req.user.email !==req.query.email){
-                return res.status(401).send({message: "forbidden access"})
-            }
+        app.get("/allRequestedBids", async (req, res) => {
+            // if(req.user.email !==req.query.email){
+            //     return res.status(401).send({message: "forbidden access"})
+            // }
             let query = [];
             if (req.query?.email) {
                 query = { postedby: req.query.email }
