@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require("jsonwebtoken");
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -10,10 +11,13 @@ const port = process.env.PORT || 5000;
 app.use(cors({
     origin: [
         'http://localhost:5173',
+        'https://wavehire-5ee55.web.app',
+        'https://wavehire-5ee55.firebaseapp.com'
     ],
     credentials: true
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 // ...........................................................................................................................................
 // ...........................................................................................................................................
@@ -30,6 +34,28 @@ const client = new MongoClient(uri, {
     }
 });
 
+
+// Middleware////////////////////////////////////////////
+const logger = async (req, res, next) => {
+    // console.log(req.method, req.url);
+    next();
+}
+
+const verifyToken = async (req, res, next) => {
+    const token = req?.cookies?.settoken;
+    // console.log(token);
+    if(!token){
+        return res.status(401).send({message: "unauthorized accessed"})
+    }
+    jwt.verify(token, process.env.SECRET_ACCESS_TOKEN, (err, decoded) => {
+        if(err){
+            return res.status(401).send({message: "unauthorized accessz"})
+        }
+        req.user = decoded;
+        next();
+    })
+}
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -44,13 +70,12 @@ async function run() {
         // authentication api
         app.post("/jwt", async (req, res) => {
             const user = req.body;
-            console.log('token owner', user);
             const token = jwt.sign(user, process.env.SECRET_ACCESS_TOKEN, {expiresIn: '1h'})
             res
             .cookie('settoken', token, {
                 httpOnly: true,
-                secure: true,
-                sameSite: 'none'
+                secure: process.env.NODE_ENV === 'production', 
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
             })
             .send({success: true});
         })
@@ -64,7 +89,7 @@ async function run() {
         })
 
 
-        // services api
+        // services api *******************************************************************************************************************************
 
         // get categories
         app.get("/categories", async (req, res) => {
@@ -75,7 +100,11 @@ async function run() {
         // insert added job in db
         app.post("/newAddedJobs", async (req, res) => {
             const newAddedJobsDetails = req.body;
-            console.log(newAddedJobsDetails);
+            // if(req.user.email !==req.body.email){
+            //     return res.status(401).send({message: "forbidden access"})
+            // }
+            console.log(req.body.email);
+            // console.log(newAddedJobsDetails);
             const result = await jobsCollection.insertOne(newAddedJobsDetails);
             res.send(result);
         })
@@ -83,14 +112,17 @@ async function run() {
         // fetch all jobs by category
         app.get("/allAddedJobs/:category", async (req, res) => {
             const selectedCategory = req.params.category;
-            console.log(selectedCategory);
+            // console.log(selectedCategory);
             const filter = { category: selectedCategory };
             const result = await jobsCollection.find(filter).toArray();
             res.send(result);
         })
 
         // fetch email wise added jobs for indivisual user
-        app.get("/allAddedJobs", async (req, res) => {
+        app.get("/allAddedJobs", logger, verifyToken, async (req, res) => {
+            if(req.user.email !==req.query.email){
+                return res.status(401).send({message: "forbidden access"})
+            }
             let query = [];
             if (req.query?.email) {
                 query = { email: req.query.email }
@@ -147,7 +179,10 @@ async function run() {
         })
 
         // get my all bids data
-        app.get("/allBids", async (req, res) => {
+        app.get("/allBids", logger, verifyToken, async (req, res) => {
+            if(req.user.email !==req.query.email){
+                return res.status(401).send({message: "forbidden access"})
+            }
             let query = [];
             console.log(req.query);
             if (req.query?.email) {
@@ -160,9 +195,12 @@ async function run() {
         })
 
         // get showall my all bids data
-        app.get("/allBidss/:status", async (req, res) => {
+        app.get("/allBidss/:status", logger, verifyToken, async (req, res) => {
+            if(req.user.email !==req.query.email){
+                return res.status(401).send({message: "forbidden access"})
+            }
             const status = req.params.status;
-            console.log(status);
+            // console.log(status);
             let query = [];
             if (req.query?.email) {
                 query = {
@@ -175,7 +213,10 @@ async function run() {
         })
 
         // get my all bids requested data
-        app.get("/allRequestedBids", async (req, res) => {
+        app.get("/allRequestedBids", logger, verifyToken, async (req, res) => {
+            if(req.user.email !==req.query.email){
+                return res.status(401).send({message: "forbidden access"})
+            }
             let query = [];
             if (req.query?.email) {
                 query = { postedby: req.query.email }
