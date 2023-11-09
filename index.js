@@ -2,18 +2,24 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+    ],
+    credentials: true
+}));
 app.use(express.json());
 
 // ...........................................................................................................................................
 // ...........................................................................................................................................
 // ......................................................Mongodb Connection...................................................................
 
-const uri = `mongodb+srv://${process.env.DB_USERRR}:${process.env.DB_PASSSR}@cluster0.8ydx2m5.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER_NAME}:${process.env.DB_USER_PASS}@cluster0.8ydx2m5.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -33,6 +39,32 @@ async function run() {
         const jobsCollection = client.db('wavehire').collection('jobsCollection');
         const categoryCollection = client.db('wavehire').collection('categories');
         const bidsCollection = client.db('wavehire').collection('bidsCollection');
+
+
+        // authentication api
+        app.post("/jwt", async (req, res) => {
+            const user = req.body;
+            console.log('token owner', user);
+            const token = jwt.sign(user, process.env.SECRET_ACCESS_TOKEN, {expiresIn: '1h'})
+            res
+            .cookie('settoken', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none'
+            })
+            .send({success: true});
+        })
+
+        // for logout
+        app.post("/logout", async (req, res) => {
+            const user = req.body;
+            res
+            .clearCookie('settoken', {maxAge: 0})
+            .send({success: true})
+        })
+
+
+        // services api
 
         // get categories
         app.get("/categories", async (req, res) => {
