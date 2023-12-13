@@ -218,6 +218,32 @@ async function run() {
             res.send(result);
         })
 
+        app.get("/sortedjob", async (req, res) => {
+            const today = new Date();
+            const result = await jobsCollection.aggregate([
+                {
+                    $match: {
+                        date: {
+                            $gte: today.toISOString()
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        convertedDate: {
+                            $toDate: "$date"
+                        }
+                    }
+                },
+                {
+                    $sort: {
+                        convertedDate: 1
+                    }
+                }
+            ]).limit(5).toArray();
+            res.send(result)
+        })
+
         // .......................................Patch.........................................................
         app.patch("/confirm/:id", async (req, res) => {
             const id = req.params.id;
